@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Iyengar">
+<meta name="theme-color" content="#eeeeea">
+<title>Iyengar Course Companion</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<style>html,body{margin:0;background:#eeeeea;-webkit-text-size-adjust:100%}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// The artifact host provides window.storage. Standalone, fall back to localStorage.
+if (!window.storage) {
+  window.storage = {
+    get: async function (k) { var v = localStorage.getItem(k); if (v === null) throw new Error('not found'); return { key: k, value: v, shared: false }; },
+    set: async function (k, v) { localStorage.setItem(k, v); return { key: k, value: v, shared: false }; },
+    delete: async function (k) { localStorage.removeItem(k); return { key: k, deleted: true, shared: false }; },
+    list: async function (p) { p = p || ''; return { keys: Object.keys(localStorage).filter(function (x) { return x.indexOf(p) === 0; }), prefix: p, shared: false }; }
+  };
+}
+</script>
+<script src="app.bundle.js"></script>
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+</script>
+</body>
+</html>

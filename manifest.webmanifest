@@ -1,0 +1,16 @@
+{
+  "name": "Iyengar Course Companion",
+  "short_name": "Iyengar",
+  "description": "Learn the pose names and how they sound, from the Preliminary and Intermediate Course I syllabi.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eeeeea",
+  "theme_color": "#eeeeea",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
