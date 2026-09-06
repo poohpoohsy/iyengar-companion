@@ -109,7 +109,7 @@ function validate() {
     return fail;
 }
 /* ---------- persistence (M9 user layer; canonical data untouched) ---------- */
-const KEYS = { prefs: "iyengar:prefs", notes: "iyengar:notes" };
+const KEYS = { prefs: "iyengar:prefs", notes: "iyengar:notes", recent: "iyengar:recent" };
 const mem = {};
 async function loadKey(k, dflt) {
     try {
@@ -307,8 +307,9 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:linear-gradi
 .srch .inp{padding-right:40px}
 .srch .clr{position:absolute;right:1px;top:1px;bottom:1px;width:38px;border:0;background:none;color:var(--mut);font-size:17px;display:flex;align-items:center;justify-content:center}
 .chips{margin-top:5px;font-size:12px;line-height:1.9;color:var(--mut)}
-.chip{background:none;border:0;padding:0;font-size:12px;color:var(--mut)}
-.chip .cw{font-weight:600;color:var(--ink)}
+.chip{background:none;border:0;padding:7px 3px;min-height:36px;font-size:12px;color:var(--mut);display:inline-flex;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:rgba(31,58,95,.14)}
+.chip .cw{font-weight:600;color:var(--ink);border-bottom:1px dotted var(--rule2)}
+.chip:active{opacity:.5}
 .chipsep{color:#c6c5bd;padding:0 6px}
 .chipwrap{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 10px}
 .chipwrap button{border:1px solid var(--rule2);background:var(--card);padding:6px 10px;font-size:11.5px}
@@ -330,6 +331,12 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:linear-gradi
 .spstack{display:flex;flex-direction:column;gap:4px;flex:0 0 30px}
 .spstack .sp{flex:0 0 30px;height:30px}
 .spg{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:-.02em}
+.recentw{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:9px 2px 2px}
+.recentw .rl{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin-right:2px}
+.recentw button{font:inherit;font-size:11px;font-weight:500;padding:4px 10px;border:1px solid var(--rule2);background:var(--card);border-radius:12px;line-height:1.3}
+.recentw button:active{transform:translateY(1px)}
+.qrow{display:flex;justify-content:flex-end;gap:6px;margin-top:7px}
+.cntbtn{font:inherit;font-size:11.5px;color:var(--mut);background:none;border:0;padding:0;margin:9px 2px 10px;display:block;width:100%;text-align:left;line-height:1.5}
 .sp{flex:0 0 34px;height:34px;border:1px solid var(--rule2);background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--plate);padding-left:2px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#0abab5;margin-left:6px;vertical-align:middle}
 .wg5{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:4px}
@@ -476,13 +483,19 @@ const Play = () => (_jsx("svg", { width: "10", height: "11", viewBox: "0 0 12 13
 function Search({ value, onChange, placeholder }) {
     return (_jsxs("div", { className: "srch", children: [_jsx("input", { className: "inp", placeholder: placeholder, value: value, onChange: (e) => onChange(e.target.value) }), value && _jsx("button", { className: "clr", onClick: () => onChange(""), "aria-label": "Clear", children: "\u2715" })] }));
 }
+const blurNow = () => { try {
+    const a = document.activeElement;
+    if (a && a.blur)
+        a.blur();
+}
+catch (e) { } };
 function Chips({ id, onWord, max = 3 }) {
     const uniq = [...new Set(((META[id] && META[id].parts) || []).map((x) => x.t).filter((t) => SW[t] && t !== "asana" && t !== "sana"))];
     const [all, setAll] = useState(false);
     const show = all ? uniq : uniq.slice(0, max);
     if (!uniq.length)
         return null;
-    return (_jsxs("div", { className: "chips", children: [show.map((t, i) => (_jsxs(React.Fragment, { children: [i > 0 && _jsx("span", { className: "chipsep", children: "|" }), _jsxs("button", { className: "chip", onClick: () => onWord(t), children: [_jsx("span", { children: SW[t].emoji }), " ", _jsx("span", { className: "cw", children: t }), " ", _jsx("span", { className: "cm", children: SW[t].easy })] })] }, t))), !all && uniq.length > max && (_jsxs(_Fragment, { children: [_jsx("span", { className: "chipsep", children: "|" }), _jsxs("button", { className: "chip", onClick: () => setAll(true), children: ["+", uniq.length - max] })] }))] }));
+    return (_jsxs("div", { className: "chips", children: [show.map((t, i) => (_jsxs(React.Fragment, { children: [i > 0 && _jsx("span", { className: "chipsep", children: "|" }), _jsxs("button", { className: "chip", title: "Every pose that uses " + t, onMouseDown: (e) => e.preventDefault(), onClick: () => { blurNow(); onWord(t); }, children: [_jsx("span", { children: SW[t].emoji }), " ", _jsx("span", { className: "cw", children: t }), " ", _jsx("span", { className: "cm", children: SW[t].easy })] })] }, t))), !all && uniq.length > max && (_jsxs(_Fragment, { children: [_jsx("span", { className: "chipsep", children: "|" }), _jsxs("button", { className: "chip", title: "Show the rest", onMouseDown: (e) => e.preventDefault(), onClick: () => setAll(true), children: ["+", uniq.length - max] })] }))] }));
 }
 function copyText(t, done) {
     try {
@@ -511,26 +524,28 @@ const imageSearch = (name) => {
 function PoseBlock({ id, onOpen, onWord, say, quiet, dot, order }) {
     const it = IT[id];
     const [copied, setCopied] = useState(false);
-    return (_jsxs("div", { className: "pblock", children: [_jsxs("div", { className: "prow", children: [order != null && _jsx("div", { className: "ord mono", children: String(order).padStart(2, "0") }), _jsx("button", { className: "th", onClick: () => onOpen(id), children: it.img ? _jsx("img", { src: it.img, alt: "" }) : null }), _jsxs("div", { style: { flex: 1, minWidth: 0 }, children: [_jsxs("div", { className: "nmrow", children: [_jsx("button", { className: "pm", onClick: () => onOpen(id), children: _jsxs("div", { className: "nm", children: [it.n, dot && _jsx("span", { className: "dot" })] }) }), !quiet && (_jsxs(_Fragment, { children: [_jsx("button", { className: "mini", title: "Copy the name", onClick: () => copyText(it.n, () => { setCopied(true); setTimeout(() => setCopied(false), 1200); }), children: copied ? "✓" : "⧉" }), _jsx("button", { className: "mini", title: "Image search", onClick: () => imageSearch(it.n), children: "\u2315" })] }))] }), _jsxs("button", { className: "pm", onClick: () => onOpen(id), children: [META[id] && META[id].en && _jsxs("div", { className: "en", children: [META[id].en, _jsxs("span", { className: "bk", children: ["bk ", it.bk, PG[id] ? " · p" + PG[id] : ""] })] }), !quiet && _jsx("div", { className: "cl", children: it.c })] })] }), !quiet && (_jsxs("div", { className: "spstack", children: [_jsx("button", { className: "sp", title: "Say the Sanskrit name", onClick: () => say(it.n), children: _jsx(Play, {}) }), _jsx("button", { className: "sp", title: "Say the sound guide", onClick: () => say(it.c), children: _jsx("span", { className: "spg", children: "abc" }) })] }))] }), onWord && _jsx(Chips, { id: id, onWord: onWord })] }));
+    return (_jsxs("div", { className: "pblock", children: [_jsxs("div", { className: "prow", children: [order != null && _jsx("div", { className: "ord mono", children: String(order).padStart(2, "0") }), _jsx("button", { className: "th", onClick: () => { blurNow(); onOpen(id); }, children: it.img ? _jsx("img", { src: it.img, alt: "" }) : null }), _jsxs("div", { style: { flex: 1, minWidth: 0 }, children: [_jsxs("div", { className: "nmrow", children: [_jsx("button", { className: "pm", onClick: () => { blurNow(); onOpen(id); }, children: _jsxs("div", { className: "nm", children: [it.n, dot && _jsx("span", { className: "dot" })] }) }), !quiet && (_jsxs(_Fragment, { children: [_jsx("button", { className: "mini", title: "Copy the name", onClick: () => copyText(it.n, () => { setCopied(true); setTimeout(() => setCopied(false), 1200); }), children: copied ? "✓" : "⧉" }), _jsx("button", { className: "mini", title: "Image search", onClick: () => imageSearch(it.n), children: "\u2315" })] }))] }), _jsxs("button", { className: "pm", onClick: () => { blurNow(); onOpen(id); }, children: [META[id] && META[id].en && _jsxs("div", { className: "en", children: [META[id].en, _jsxs("span", { className: "bk", children: ["bk ", it.bk, PG[id] ? " · p" + PG[id] : ""] })] }), !quiet && _jsx("div", { className: "cl", children: it.c })] })] }), !quiet && (_jsx("div", { className: "spstack", children: _jsx("button", { className: "sp", title: "Say the Sanskrit name", onClick: () => say(it.n), children: _jsx(Play, {}) }) }))] }), onWord && _jsx(Chips, { id: id, onWord: onWord })] }));
 }
 /* ---------- POSE DETAIL ---------- */
-function PoseDetail({ id, back, say, onWord, notes, setNotes }) {
+function PoseDetail({ id, back, backLabel, say, onWord, notes, setNotes }) {
     const isB2 = id.startsWith("B2-");
     const rec = isB2 ? B2_BY_ID[id] : POSE_BY_ID[id];
     const it = IT[id];
     const meta = META[id] || {};
     const [src, setSrc] = useState(false);
+    const [qOpen, setQOpen] = useState(false);
+    const qRef = React.useRef(null);
     const n = notes[id] || { improve: false, recovery: false, q: "" };
     const setNote = (patch) => setNotes((p) => ({ ...p, [id]: { ...n, ...patch } }));
     const weeksIn = isB2 ? [] : WEEK_NUMBERS.filter((w) => weekRows(w).some((r) => r.pose_id === id));
-    return (_jsxs(_Fragment, { children: [_jsx("button", { className: "lk", onClick: back, style: { marginBottom: 10 }, children: "\u2190 Back" }), _jsx(Plate, { pose: rec, src: isB2 ? b2Image(rec) || null : undefined }), _jsxs("div", { style: { textAlign: "center", marginTop: 15 }, children: [_jsx("div", { style: { fontSize: 23, fontWeight: 600, lineHeight: 1.2 }, children: it.n }), meta.en && _jsx("div", { style: { fontSize: 15, color: "var(--mut)", marginTop: 4 }, children: meta.en }), meta.iast && _jsx("div", { className: "iast", children: meta.iast }), _jsx("div", { className: "clue", children: it.c }), _jsx("button", { className: "btn pri", style: { marginTop: 12, padding: "11px 26px", fontSize: 15 }, onClick: () => say(it.n), children: "Hear it" }), _jsx("div", { style: { marginTop: 8 }, children: _jsx("button", { className: "lk", style: { fontSize: 12 }, onClick: () => say(it.n, prefsRate() * 0.5), children: "say it slower" }) })] }), _jsx("h2", { className: "sec", children: "What the name says" }), _jsx("div", { className: "card tight", children: _jsx(Chips, { id: id, onWord: onWord, max: 9 }) }), meta.story && (_jsxs("div", { className: "story", children: [_jsx("div", { className: "t", children: meta.story.t }), _jsx("div", { className: "s", children: meta.story.s })] })), _jsx("h2", { className: "sec", children: "My notes" }), _jsxs("div", { className: "card tight", children: [_jsxs("div", { className: "row", children: [_jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Feel" }), _jsx("button", { className: "tog", "data-on": n.improve ? "1" : "0", onClick: () => setNote({ improve: !n.improve }), children: n.improve ? "Needs improving" : "Fine as it is" })] }), _jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Run recovery" }), _jsx("button", { className: "tog", "data-on": n.recovery ? "1" : "0", onClick: () => setNote({ recovery: !n.recovery }), children: n.recovery ? "Yes" : "—" })] })] }), _jsx("div", { className: "eyebrow2", style: { marginTop: 12 }, children: "Question for my teacher" }), _jsx("textarea", { className: "inp", style: { marginTop: 5, minHeight: 60, fontSize: 14 }, placeholder: "What do I want to ask?", value: n.q, onChange: (e) => setNote({ q: e.target.value }) })] }), _jsx("h2", { className: "sec", children: "Where it comes from" }), _jsxs("div", { className: "card tight", style: { fontSize: 13, lineHeight: 1.6 }, children: ["Book ", it.bk, " \u00B7 Chapter ", CH[id].num, " \u2014 ", CH[id].en, PG[id] ? " · p" + PG[id] : "", _jsx("div", { style: { color: "var(--mut)", marginTop: 3 }, children: CH[id].sk }), !isB2 && weeksIn.length > 0 && (_jsx("div", { className: "row", style: { marginTop: 10 }, children: weeksIn.map((w) => _jsx("span", { className: "pill", children: w }, w)) }))] }), _jsxs("button", { className: "ghead", style: { marginTop: 14 }, onClick: () => setSrc(!src), children: [_jsx("span", { children: "Source and variants" }), _jsx("span", { className: "mono", children: src ? "–" : "+" })] }), src && (_jsxs("div", { className: "card tight", children: [_jsxs("div", { className: "ct", style: { marginBottom: 10 }, children: [_jsx("span", { className: "mono", style: { fontSize: 10, color: "var(--mut)" }, children: id }), !isB2 && _jsx(TierBadge, { pose: rec })] }), !isB2 ? (_jsxs(_Fragment, { children: [_jsxs("div", { style: { fontSize: 13, marginBottom: 8 }, children: [rec.sourceBasis, ". Source label: ", rec.srcVariants, "."] }), rec.canonicalName && rec.canonicalName !== it.n && (_jsxs("div", { style: { fontSize: 12, color: "var(--mut)", marginBottom: 8, lineHeight: 1.55 }, children: ["Literal source label: \u201C", rec.canonicalName, "\u201D. ", rec.transitional, " is a transitional position on entry and exit, not a separate pose."] })), rec.variants.map((v) => (_jsx("div", { style: { borderTop: "1px solid var(--rule)", padding: "8px 0", fontSize: 13.5 }, children: v.raw }, v.vid)))] })) : (_jsxs("dl", { className: "kv", children: [_jsx("dt", { children: "Pages" }), _jsx("dd", { children: rec.pages.join(", ") }), rec.figs && rec.figs.length > 0 && (_jsxs(_Fragment, { children: [_jsx("dt", { children: "Figures" }), _jsx("dd", { children: rec.figs.join(", ") })] })), _jsx("dt", { children: "Mapping" }), _jsx("dd", { children: rec.mapNote })] }))] }))] }));
+    return (_jsxs(_Fragment, { children: [_jsx("button", { className: "lk", onClick: back, style: { marginBottom: 10 }, children: "\u2190 " + (backLabel || "Back") }), _jsx(Plate, { pose: rec, src: isB2 ? b2Image(rec) || null : undefined }), _jsxs("div", { style: { textAlign: "center", marginTop: 15 }, children: [_jsx("div", { style: { fontSize: 23, fontWeight: 600, lineHeight: 1.2 }, children: it.n }), meta.en && _jsx("div", { style: { fontSize: 15, color: "var(--mut)", marginTop: 4 }, children: meta.en }), meta.iast && _jsx("div", { className: "iast", children: meta.iast }), _jsx("div", { className: "clue", children: it.c }), _jsx("button", { className: "btn pri", style: { marginTop: 12, padding: "11px 26px", fontSize: 15 }, onClick: () => say(it.n), children: "Hear it" }), _jsx("div", { style: { marginTop: 8 }, children: _jsx("button", { className: "lk", style: { fontSize: 12 }, onClick: () => say(it.n, prefsRate() * 0.5), children: "say it slower" }) })] }), _jsx("h2", { className: "sec", children: "What the name says" }), _jsx("div", { className: "card tight", children: _jsx(Chips, { id: id, onWord: onWord, max: 9 }) }), meta.story && (_jsxs("div", { className: "story", children: [_jsx("div", { className: "t", children: meta.story.t }), _jsx("div", { className: "s", children: meta.story.s })] })), _jsx("h2", { className: "sec", children: "My notes" }), _jsxs("div", { className: "card tight", children: [_jsxs("div", { className: "row", children: [_jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Feel" }), _jsx("button", { className: "tog", "data-on": n.improve ? "1" : "0", onClick: () => setNote({ improve: !n.improve }), children: n.improve ? "Needs improving" : "Fine as it is" })] }), _jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Run recovery" }), _jsx("button", { className: "tog", "data-on": n.recovery ? "1" : "0", onClick: () => setNote({ recovery: !n.recovery }), children: n.recovery ? "Yes" : "—" })] })] }), _jsx("div", { className: "eyebrow2", style: { marginTop: 12 }, children: "Question for my teacher" }), _jsxs(_Fragment, { children: [_jsx("textarea", { ref: qRef, className: "inp", style: { marginTop: 5, minHeight: 60, fontSize: 14 }, placeholder: "What do I want to ask?", value: n.q, onFocus: () => setQOpen(true), onBlur: () => setQOpen(false), onChange: (e) => setNote({ q: e.target.value }) }), (qOpen || n.q) && _jsxs("div", { className: "qrow", children: [n.q ? _jsx("button", { className: "btn sm", onMouseDown: (e) => e.preventDefault(), onClick: () => { setNote({ q: "" }); if (qRef.current) qRef.current.blur(); setQOpen(false); }, children: "Clear" }) : null, _jsx("button", { className: "btn sm pri", onMouseDown: (e) => e.preventDefault(), onClick: () => { if (qRef.current) qRef.current.blur(); setQOpen(false); }, children: "Done" })] })] })] }), _jsx("h2", { className: "sec", children: "Where it comes from" }), _jsxs("div", { className: "card tight", style: { fontSize: 13, lineHeight: 1.6 }, children: ["Book ", it.bk, " \u00B7 Chapter ", CH[id].num, " \u2014 ", CH[id].en, PG[id] ? " · p" + PG[id] : "", _jsx("div", { style: { color: "var(--mut)", marginTop: 3 }, children: CH[id].sk }), !isB2 && weeksIn.length > 0 && (_jsx("div", { className: "row", style: { marginTop: 10 }, children: weeksIn.map((w) => _jsx("span", { className: "pill", children: w }, w)) }))] }), _jsxs("button", { className: "ghead", style: { marginTop: 14 }, onClick: () => setSrc(!src), children: [_jsx("span", { children: "Source and variants" }), _jsx("span", { className: "mono", children: src ? "–" : "+" })] }), src && (_jsxs("div", { className: "card tight", children: [_jsxs("div", { className: "ct", style: { marginBottom: 10 }, children: [_jsx("span", { className: "mono", style: { fontSize: 10, color: "var(--mut)" }, children: id }), !isB2 && _jsx(TierBadge, { pose: rec })] }), !isB2 ? (_jsxs(_Fragment, { children: [_jsxs("div", { style: { fontSize: 13, marginBottom: 8 }, children: [rec.sourceBasis, ". Source label: ", rec.srcVariants, "."] }), rec.canonicalName && rec.canonicalName !== it.n && (_jsxs("div", { style: { fontSize: 12, color: "var(--mut)", marginBottom: 8, lineHeight: 1.55 }, children: ["Literal source label: \u201C", rec.canonicalName, "\u201D. ", rec.transitional, " is a transitional position on entry and exit, not a separate pose."] })), rec.variants.map((v) => (_jsx("div", { style: { borderTop: "1px solid var(--rule)", padding: "8px 0", fontSize: 13.5 }, children: v.raw }, v.vid)))] })) : (_jsxs("dl", { className: "kv", children: [_jsx("dt", { children: "Pages" }), _jsx("dd", { children: rec.pages.join(", ") }), rec.figs && rec.figs.length > 0 && (_jsxs(_Fragment, { children: [_jsx("dt", { children: "Figures" }), _jsx("dd", { children: rec.figs.join(", ") })] })), _jsx("dt", { children: "Mapping" }), _jsx("dd", { children: rec.mapNote })] }))] }))] }));
 }
 /* ---------- LEARN ---------- */
-function WordDetail({ w, back, onOpen, say, onWordJump }) {
+function WordDetail({ w, back, backLabel, onOpen, say, onWordJump }) {
     const [more, setMore] = useState(false);
-    return (_jsxs(_Fragment, { children: [_jsx("button", { className: "lk", onClick: back, style: { marginBottom: 10 }, children: "\u2190 Words" }), _jsxs("div", { className: "bigw", children: [_jsx("div", { className: "e", children: w.emoji }), _jsx("div", { className: "w", children: w.word }), _jsx("div", { className: "m", children: w.easy }), _jsx("div", { className: "s", children: w.say }), _jsxs("div", { className: "row", style: { justifyContent: "center", marginTop: 11 }, children: [_jsx("button", { className: "btn", onClick: () => say(w.word), children: "Hear it" }), _jsx("button", { className: "btn", onClick: () => say(w.word, prefsRate() * 0.5), children: "slower" })] })] }), _jsxs("h2", { className: "sec", children: [w.n, " poses use it"] }), _jsx("div", { className: "card", style: { padding: "2px 11px" }, children: [...w.b1, ...w.b2].map((id) => _jsx(PoseBlock, { id: id, onOpen: onOpen, onWord: (x) => onWordJump(x), say: say }, id)) }), _jsx("button", { className: "info", onClick: () => setMore(!more), children: "\u24D8 More about this word" }), more && (_jsxs("div", { className: "card", style: { marginTop: 8, fontSize: 13, lineHeight: 1.7 }, children: [_jsxs("div", { children: [_jsx("b", { children: "Formal English:" }), " ", w.formal] }), _jsxs("div", { children: [_jsx("b", { children: "Role:" }), " ", w.kind === "modifier" ? "modifier — qualifies a pose" : "core — names a pose"] }), _jsxs("div", { children: [_jsx("b", { children: "Pronunciation:" }), " Tier C, approximate, not authoritative"] }), w.mnemonic_note && _jsx("div", { style: { marginTop: 6, color: "var(--mut)" }, children: w.mnemonic_note })] })), _jsx("div", { className: "foot", children: SIG })] }));
+    return (_jsxs(_Fragment, { children: [_jsx("button", { className: "lk", onClick: back, style: { marginBottom: 10 }, children: "\u2190 " + (backLabel || "Words") }), _jsxs("div", { className: "bigw", children: [_jsx("div", { className: "e", children: w.emoji }), _jsx("div", { className: "w", children: w.word }), _jsx("div", { className: "m", children: w.easy }), _jsx("div", { className: "s", children: w.say }), _jsxs("div", { className: "row", style: { justifyContent: "center", marginTop: 11 }, children: [_jsx("button", { className: "btn", onClick: () => say(w.word), children: "Hear it" }), _jsx("button", { className: "btn", onClick: () => say(w.word, prefsRate() * 0.5), children: "slower" })] })] }), _jsxs("h2", { className: "sec", children: [w.n, " poses use it"] }), _jsx("div", { className: "card", style: { padding: "2px 11px" }, children: [...w.b1, ...w.b2].map((id) => _jsx(PoseBlock, { id: id, onOpen: onOpen, onWord: (x) => onWordJump(x), say: say }, id)) }), _jsx("button", { className: "info", onClick: () => setMore(!more), children: "\u24D8 More about this word" }), more && (_jsxs("div", { className: "card", style: { marginTop: 8, fontSize: 13, lineHeight: 1.7 }, children: [_jsxs("div", { children: [_jsx("b", { children: "Formal English:" }), " ", w.formal] }), _jsxs("div", { children: [_jsx("b", { children: "Role:" }), " ", w.kind === "modifier" ? "modifier — qualifies a pose" : "core — names a pose"] }), _jsxs("div", { children: [_jsx("b", { children: "Pronunciation:" }), " Tier C, approximate, not authoritative"] }), w.mnemonic_note && _jsx("div", { style: { marginTop: 6, color: "var(--mut)" }, children: w.mnemonic_note })] })), _jsx("div", { className: "foot", children: SIG })] }));
 }
-function LearnView({ onWord, onPose, say }) {
+function LearnView({ onWord, onPose, say, recent }) {
     const [wq, setWq] = useState("");
     const t = wq.trim().toLowerCase();
     const groups = D.wordgroups.map((g) => ({
@@ -538,7 +553,7 @@ function LearnView({ onWord, onPose, say }) {
         words: g.words.map((x) => SW[x]).filter((w) => w && (!t || (w.word + " " + w.easy + " " + w.formal + " " + w.say).toLowerCase().includes(t))),
     })).filter((g) => g.words.length);
     const poseHits = t ? IDS.filter((id) => (IT[id].n + " " + ((META[id] || {}).en || "") + " " + IT[id].c).toLowerCase().includes(t)) : [];
-    return (_jsxs(_Fragment, { children: [_jsx(Search, { value: wq, onChange: setWq, placeholder: "Search a word or a pose" }), _jsxs("div", { className: "subhead", style: { margin: "9px 2px 10px" }, children: [groups.reduce((a, g) => a + g.words.length, 0), " of ", D.sanskrit.words.length, " words"] }), groups.map((g) => (_jsxs("div", { children: [_jsx("h2", { className: "sec", style: { margin: "13px 0 5px" }, children: g.name }), _jsx("div", { className: "wg5", children: g.words.map((w) => (_jsxs("button", { onClick: () => onWord(w.word), children: [_jsx("span", { className: "e", children: w.emoji }), _jsx("span", { className: "w", children: w.word }), _jsx("span", { className: "m", children: w.easy })] }, w.word))) })] }, g.name))), t && poseHits.length > 0 && (_jsxs(_Fragment, { children: [_jsxs("h2", { className: "sec", style: { margin: "16px 0 5px" }, children: ["Poses matching \u201C", wq.trim(), "\u201D"] }), _jsx("div", { className: "card", style: { padding: "2px 11px" }, children: poseHits.slice(0, 12).map((id) => _jsx(PoseBlock, { id: id, onOpen: onPose, onWord: onWord, say: say }, id)) })] })), _jsx("div", { className: "subhead", style: { marginTop: 12 }, children: D.sanskrit.note }), _jsx("div", { className: "foot", children: SIG })] }));
+    return (_jsxs(_Fragment, { children: [_jsx(Search, { value: wq, onChange: setWq, placeholder: "Search a word or a pose" }), (recent && recent.length > 0) && _jsxs("div", { className: "recentw", children: [_jsx("span", { className: "rl", children: "Recent" }), recent.map((rw) => _jsx("button", { onClick: () => onWord(rw), children: rw }, rw))] }), _jsxs("button", { className: "cntbtn", onClick: () => setWq(""), children: [groups.reduce((a, g) => a + g.words.length, 0), " of ", D.sanskrit.words.length, " words", t ? " \u00B7 tap to clear" : ""] }), groups.map((g) => (_jsxs("div", { children: [_jsx("h2", { className: "sec", style: { margin: "13px 0 5px" }, children: g.name }), _jsx("div", { className: "wg5", children: g.words.map((w) => (_jsxs("button", { onClick: () => onWord(w.word), children: [_jsx("span", { className: "e", children: w.emoji }), _jsx("span", { className: "w", children: w.word }), _jsx("span", { className: "m", children: w.easy })] }, w.word))) })] }, g.name))), t && poseHits.length > 0 && (_jsxs(_Fragment, { children: [_jsxs("h2", { className: "sec", style: { margin: "16px 0 5px" }, children: ["Poses matching \u201C", wq.trim(), "\u201D"] }), _jsx("div", { className: "card", style: { padding: "2px 11px" }, children: poseHits.slice(0, 12).map((id) => _jsx(PoseBlock, { id: id, onOpen: onPose, onWord: onWord, say: say }, id)) })] })), _jsx("div", { className: "subhead", style: { marginTop: 12 }, children: D.sanskrit.note }), _jsx("div", { className: "foot", children: SIG })] }));
 }
 /* ---------- POSE ---------- */
 function PoseBrowse({ onOpen, onWord, say }) {
@@ -588,7 +603,7 @@ function ListView({ notes, setNotes, onOpen }) {
     return (_jsxs(_Fragment, { children: [_jsxs("div", { className: "stick", children: [_jsx(Search, { value: lq, onChange: setLq, placeholder: "Search a Sanskrit name" }), _jsxs("div", { className: "row", style: { marginTop: 7 }, children: [_jsx("button", { className: "pillx", onClick: () => setRec(true), title: "Teacher recovery sequence", children: "\uD83D\uDC37\uD83E\uDDB6" }), [["recovery", "Recovery", counts.recovery], ["improve", "Improve", counts.improve], ["q", "Questions", counts.q]].map(([k, l, n]) => (_jsxs("button", { className: "pillx", "data-on": filter === k ? "1" : "0", onClick: () => setFilter(filter === k ? null : k), children: [l, n ? " " + n : ""] }, k)))] }), !filter && (_jsx("div", { className: "abc", children: letters.map((L) => _jsx("a", { href: "#L" + L, children: L }, L)) }))] }), all.length === 0 && _jsx("div", { className: "card tight", style: { fontSize: 13, color: "var(--mut)" }, children: "Nothing flagged yet." }), letters.map((L) => (_jsxs("div", { children: [_jsx("div", { className: "lhead", id: "L" + L, children: L }), _jsx("div", { className: "card", style: { padding: "2px 12px" }, children: all.filter((id) => IT[id].n[0].toUpperCase() === L).map((id) => {
                             const n = note(id);
                             const isOpen = open === id;
-                            return (_jsxs("div", { children: [_jsxs("button", { className: "lrow", onClick: () => setOpen(isOpen ? null : id), children: [_jsx("span", { className: "lth", children: IT[id].img ? _jsx("img", { src: IT[id].img, alt: "" }) : null }), _jsxs("span", { style: { flex: 1, minWidth: 0 }, children: [_jsx("span", { className: "nm", children: IT[id].n }), _jsxs("span", { className: "sub2", children: [(META[id] || {}).en, _jsxs("span", { className: "bk", children: ["bk ", IT[id].bk, PG[id] ? " · p" + PG[id] : ""] })] })] }), (n.improve || n.recovery || n.q.trim()) && (_jsx("span", { className: "flag", children: [n.improve && "improve", n.recovery && "recovery", n.q.trim() && "note"].filter(Boolean).join(" · ") }))] }), filter === "q" && n.q.trim() && !isOpen && _jsx("div", { className: "qshow", children: n.q }), isOpen && (_jsxs("div", { className: "notebox", children: [_jsxs("div", { className: "row", style: { marginBottom: 12 }, children: [_jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Feel" }), _jsx("button", { className: "tog", "data-on": n.improve ? "1" : "0", onClick: () => setNote(id, { improve: !n.improve }), children: n.improve ? "Needs improving" : "Fine as it is" })] }), _jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Run recovery" }), _jsx("button", { className: "tog", "data-on": n.recovery ? "1" : "0", onClick: () => setNote(id, { recovery: !n.recovery }), children: n.recovery ? "Yes" : "—" })] })] }), _jsx("div", { className: "eyebrow2", children: "Question for my teacher" }), _jsx("textarea", { className: "inp", style: { marginTop: 5, minHeight: 64, fontSize: 14 }, placeholder: "What do I want to ask?", value: n.q, onChange: (e) => setNote(id, { q: e.target.value }) }), _jsxs("div", { className: "row", style: { marginTop: 9 }, children: [_jsx("button", { className: "btn sm", onClick: () => onOpen(id), children: "Open pose" }), _jsx("button", { className: "btn sm", onClick: () => setOpen(null), children: "Done" })] })] }))] }, id));
+                            return (_jsxs("div", { children: [_jsxs("button", { className: "lrow", onClick: () => setOpen(isOpen ? null : id), children: [_jsx("span", { className: "lth", children: IT[id].img ? _jsx("img", { src: IT[id].img, alt: "" }) : null }), _jsxs("span", { style: { flex: 1, minWidth: 0 }, children: [_jsx("span", { className: "nm", children: IT[id].n }), _jsxs("span", { className: "sub2", children: [(META[id] || {}).en, _jsxs("span", { className: "bk", children: ["bk ", IT[id].bk, PG[id] ? " · p" + PG[id] : ""] })] })] }), (n.improve || n.recovery || n.q.trim()) && (_jsx("span", { className: "flag", children: [n.improve && "improve", n.recovery && "recovery", n.q.trim() && "note"].filter(Boolean).join(" · ") }))] }), filter === "q" && n.q.trim() && !isOpen && _jsx("div", { className: "qshow", children: n.q }), isOpen && (_jsxs("div", { className: "notebox", children: [_jsxs("div", { className: "row", style: { marginBottom: 12 }, children: [_jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Feel" }), _jsx("button", { className: "tog", "data-on": n.improve ? "1" : "0", onClick: () => setNote(id, { improve: !n.improve }), children: n.improve ? "Needs improving" : "Fine as it is" })] }), _jsxs("div", { children: [_jsx("div", { className: "eyebrow2", children: "Run recovery" }), _jsx("button", { className: "tog", "data-on": n.recovery ? "1" : "0", onClick: () => setNote(id, { recovery: !n.recovery }), children: n.recovery ? "Yes" : "—" })] })] }), _jsx("div", { className: "eyebrow2", children: "Question for my teacher" }), _jsx("textarea", { className: "inp", style: { marginTop: 5, minHeight: 64, fontSize: 14 }, placeholder: "What do I want to ask?", value: n.q, onChange: (e) => setNote(id, { q: e.target.value }) }), _jsxs("div", { className: "row", style: { marginTop: 9 }, children: [_jsx("button", { className: "btn sm", onClick: () => { blurNow(); onOpen(id); }, children: "Open pose" }), _jsx("button", { className: "btn sm", onClick: () => setOpen(null), children: "Done" })] })] }))] }, id));
                         }) })] }, L)))] }));
 }
 /* ---------- WEEKS ---------- */
@@ -674,17 +689,22 @@ const DEFAULT_PREFS = { voiceURI: null, sayRate: 0.5, pranSpeed: "slow", pranRep
 function App() {
     const failures = useMemo(validate, []);
     const [tab, setTab] = useState("learn");
-    const [pose, setPose] = useState(null);
-    const [word, setWord] = useState(null);
+    const [stack, setStack] = useState([]);
+    const [recent, setRecent] = useState([]);
+    const scrollY = React.useRef([]);
+    const frame = stack.length ? stack[stack.length - 1] : null;
+    const pose = frame && frame.t === "pose" ? frame.id : null;
+    const word = frame && frame.t === "word" ? frame.id : null;
     const [notes, setNotes] = useState({});
     const [prefs, setPrefs] = useState(DEFAULT_PREFS);
     const [ready, setReady] = useState(false);
     const voices = useVoices();
     useEffect(() => {
         (async () => {
-            const [n, p] = await Promise.all([loadKey(KEYS.notes, {}), loadKey(KEYS.prefs, DEFAULT_PREFS)]);
+            const [n, p, rc] = await Promise.all([loadKey(KEYS.notes, {}), loadKey(KEYS.prefs, DEFAULT_PREFS), loadKey(KEYS.recent, [])]);
             setNotes(n || {});
             setPrefs({ ...DEFAULT_PREFS, ...p });
+            setRecent(Array.isArray(rc) ? rc.filter((x) => SW[x]).slice(0, 5) : []);
             setReady(true);
         })();
     }, []);
@@ -692,6 +712,8 @@ function App() {
         saveKey(KEYS.notes, notes); }, [notes, ready]);
     useEffect(() => { if (ready)
         saveKey(KEYS.prefs, prefs); }, [prefs, ready]);
+    useEffect(() => { if (ready)
+        saveKey(KEYS.recent, recent); }, [recent, ready]);
     RATE_REF.current = prefs.sayRate;
     const say = useCallback((text, rate) => {
         try {
@@ -707,17 +729,44 @@ function App() {
         }
         catch (e) { }
     }, [voices, prefs.voiceURI, prefs.sayRate]);
-    const openWord = (w) => { setWord(w); setPose(null); setTab("learn"); };
-    const openPose = (id) => { setPose(id); setWord(null); };
+    const push = (f) => {
+        scrollY.current[stack.length] = window.scrollY || 0;
+        setStack((s) => [...s, f]);
+        window.scrollTo(0, 0);
+    };
+    const openWord = (w) => {
+        if (!SW[w])
+            return;
+        setRecent((r) => [w, ...r.filter((x) => x !== w)].slice(0, 5));
+        if (frame && frame.t === "word" && frame.id === w)
+            return;
+        push({ t: "word", id: w });
+    };
+    const openPose = (id) => {
+        if (frame && frame.t === "pose" && frame.id === id)
+            return;
+        push({ t: "pose", id: id });
+    };
+    const goBack = () => {
+        const y = scrollY.current[stack.length - 1] || 0;
+        setStack((s) => s.slice(0, -1));
+        setTimeout(() => window.scrollTo(0, y), 0);
+    };
+    const clip = (x) => (x && x.length > 24 ? x.slice(0, 23) + "\u2026" : x);
+    const prevFrame = stack.length > 1 ? stack[stack.length - 2] : null;
+    const backLabel = prevFrame
+        ? clip(prevFrame.t === "word" ? prevFrame.id : (IT[prevFrame.id] ? IT[prevFrame.id].n : "Back"))
+        : (TABS.find((x) => x[0] === tab) || [null, "Back"])[1];
     if (failures.length)
         return (_jsxs("div", { className: "ap", children: [_jsx("style", { children: CSS }), _jsxs("div", { className: "fail", children: [_jsx("div", { className: "eyebrow", style: { color: "var(--stop)" }, children: "Canonical integrity failure" }), _jsx("h1", { style: { fontSize: 18, margin: "8px 0 12px" }, children: "The app will not start" }), failures.map((f, i) => _jsxs("div", { className: "mono", style: { fontSize: 12, color: "var(--stop)", padding: "4px 0" }, children: ["\u00B7 ", f] }, i))] })] }));
-    let body;
+    let detail = null;
     if (pose)
-        body = _jsx(PoseDetail, { id: pose, back: () => setPose(null), say: say, onWord: openWord, notes: notes, setNotes: setNotes });
+        detail = _jsx(PoseDetail, { id: pose, back: goBack, backLabel: backLabel, say: say, onWord: openWord, notes: notes, setNotes: setNotes });
     else if (word)
-        body = _jsx(WordDetail, { w: SW[word], back: () => setWord(null), onOpen: openPose, say: say, onWordJump: openWord });
-    else if (tab === "learn")
-        body = _jsx(LearnView, { onWord: openWord, onPose: openPose, say: say });
+        detail = _jsx(WordDetail, { w: SW[word], back: goBack, backLabel: backLabel, onOpen: openPose, say: say, onWordJump: openWord });
+    let body;
+    if (tab === "learn")
+        body = _jsx(LearnView, { onWord: openWord, onPose: openPose, say: say, recent: recent });
     else if (tab === "pose")
         body = _jsx(PoseBrowse, { onOpen: openPose, onWord: openWord, say: say });
     else if (tab === "list")
@@ -728,7 +777,7 @@ function App() {
         body = (_jsxs(_Fragment, { children: [_jsx("h2", { className: "sec", style: { marginTop: 2 }, children: "Pata\u00F1jali mantra" }), _jsx("div", { className: "subhead", children: "Your own notes." }), D.patanjali.map((p, i) => _jsx("img", { className: "hw", src: p.src, alt: p.label }, i))] }));
     else
         body = _jsx(MoreView, { prefs: prefs, setPrefs: setPrefs, say: say, voices: voices, notes: notes, setNotes: setNotes });
-    return (_jsxs("div", { className: "ap", children: [_jsx("style", { children: CSS }), _jsxs("div", { className: "hd", children: [_jsx("h1", { children: "Iyengar Course Companion" }), _jsx("span", { className: "sub", children: "Book 1 \u00B7 2" })] }), _jsx("div", { className: "wrap", children: body }), _jsx("nav", { className: "tabs", children: TABS.map(([k, l]) => (_jsx("button", { "data-on": !pose && !word && tab === k ? "1" : "0", onClick: () => { setTab(k); setPose(null); setWord(null); }, children: l }, k))) })] }));
+    return (_jsxs("div", { className: "ap", children: [_jsx("style", { children: CSS }), _jsxs("div", { className: "hd", children: [_jsx("h1", { children: "Iyengar Course Companion" }), _jsx("span", { className: "sub", children: "Book 1 \u00B7 2" })] }), _jsxs("div", { className: "wrap", children: [_jsx("div", { style: { display: frame ? "none" : "block" }, children: body }), detail] }), _jsx("nav", { className: "tabs", children: TABS.map(([k, l]) => (_jsx("button", { "data-on": !frame && tab === k ? "1" : "0", onClick: () => { setTab(k); setStack([]); scrollY.current = []; window.scrollTo(0, 0); }, children: l }, k))) })] }));
 }
 
 __require('react-dom/client').createRoot(document.getElementById('root')).render(__require('react/jsx-runtime').jsx(App,{}));

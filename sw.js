@@ -1,5 +1,5 @@
 // Caches the app on first visit so it works without a signal afterwards.
-const CACHE = 'iyengar-v8';
+const CACHE = 'iyengar-v9';
 const ASSETS = ['./', './index.html', './app.bundle.js', './manifest.webmanifest',
                 './favicon-32.png', './icon-180.png', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 self.addEventListener('install', (e) => {
