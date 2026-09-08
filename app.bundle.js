@@ -342,6 +342,34 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:linear-gradi
 .az>button[data-on="1"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .az .c{margin-left:auto;font-size:12px;color:var(--mut);white-space:nowrap;padding-left:8px}
 .az .c button{border:0;background:none;font:inherit;font-size:12px;color:var(--plate);text-decoration:underline;margin-left:7px;padding:0}
+.gm{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--rule);padding:11px 12px;margin-bottom:7px;font:inherit}
+.gm .t{font-size:15px;font-weight:600}
+.gm .d{font-size:12px;color:var(--mut);margin-top:3px;line-height:1.45}
+.gm .n{float:right;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#9a988f}
+.gbar{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
+.gbar .sc{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mut)}
+.gq{background:var(--card);border:1px solid var(--rule);padding:14px;text-align:center}
+.gq img{max-height:210px;max-width:100%}
+.gqt{font-size:20px;font-weight:600;line-height:1.35;letter-spacing:-.01em}
+.gqt u{text-decoration:none;border-bottom:2px solid var(--plate);color:var(--plate);letter-spacing:.08em}
+.gqh{font-size:12.5px;color:var(--mut);margin-top:7px}
+.gopts{margin-top:11px;display:flex;flex-direction:column;gap:6px}
+.gopt{font:inherit;font-size:14px;text-align:left;padding:11px 12px;background:var(--card);border:1px solid var(--rule2);color:var(--ink)}
+.gopt[data-s="right"]{border-color:var(--plate);background:#eef2f7;font-weight:600}
+.gopt[data-s="wrong"]{border-color:var(--stop);background:#f7eeed;color:var(--stop)}
+.gopt[data-s="dim"]{color:#a8a69d}
+.gaf{margin-top:12px;border-top:1px solid var(--rule);padding-top:11px;font-size:13px;line-height:1.55}
+.gaf .lit{color:var(--mut);margin-top:4px}
+.gsplit{display:flex;flex-wrap:wrap;justify-content:center}
+.gsplit span{font-size:21px;font-weight:600;letter-spacing:-.01em;padding-bottom:2px;border-bottom:2px solid transparent;transition:margin .5s cubic-bezier(.22,1,.36,1),border-color .4s}
+.gsplit.on span{margin:0 5px;border-bottom-color:var(--plate)}
+.ggl{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:8px;min-height:16px}
+.ggl span{font-size:11px;color:var(--mut);opacity:0;transform:translateY(-4px);transition:opacity .35s,transform .35s}
+.ggl.on span{opacity:1;transform:none}
+.ggl.on span:nth-child(2){transition-delay:.07s}
+.ggl.on span:nth-child(3){transition-delay:.14s}
+.ggl.on span:nth-child(4){transition-delay:.21s}
+@media (prefers-reduced-motion:reduce){.gsplit span,.ggl span{transition:none}}
 .sp{flex:0 0 34px;height:34px;border:1px solid var(--rule2);background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--plate);padding-left:2px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#0abab5;margin-left:6px;vertical-align:middle}
 .wg5{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:4px}
@@ -667,7 +695,7 @@ function pickVoice(voices, prefer) {
     }
     return null;
 }
-function MoreView({ prefs, setPrefs, say, voices, notes, setNotes, learnKeyCount }) {
+function MoreView({ prefs, setPrefs, say, voices, notes, setNotes, learnKeyCount, goWeeks }) {
     const [page, setPage] = useState(null);
     const enIN = voices.filter((v) => /^en[-_]IN/i.test(v.lang));
     const cov = visualCoverage();
@@ -688,10 +716,172 @@ function MoreView({ prefs, setPrefs, say, voices, notes, setNotes, learnKeyCount
                         ["POSE-070 Salabhasana", "caption text printed inside the artwork", "cosmetic"],
                         ["Book 1 page numbers", "read from the contents pages; 65 of 72 poses have one, 7 do not appear in the numbered contents", "note"],
                     ].map(([t, why, kind]) => (_jsxs("div", { style: { padding: "9px 0", borderBottom: "1px solid var(--rule)" }, children: [_jsxs("div", { className: "spread", children: [_jsx("span", { style: { fontSize: 13.5, fontWeight: 500 }, children: t }), _jsx("span", { className: "mono", style: { fontSize: 10, color: "var(--mut)" }, children: kind })] }), _jsx("div", { style: { fontSize: 12, color: "var(--mut)", marginTop: 3, lineHeight: 1.5 }, children: why })] }, t))) }), _jsx("h2", { className: "sec", children: "Counts" }), _jsx("div", { className: "card tight", children: _jsxs("dl", { className: "kv", children: [_jsx("dt", { children: "Entries" }), _jsxs("dd", { children: [IDS.length, " \u2014 ", D.poses.length, " Book 1, ", B2.length, " Book 2"] }), _jsx("dt", { children: "Drawings" }), _jsxs("dd", { children: [cov.present, " of ", cov.total, " \u00B7 ", cov.sharedBinaries, " shared files \u00B7 ", cov.duplicatePaths, " duplicate paths"] }), _jsx("dt", { children: "Sanskrit words" }), _jsxs("dd", { children: [D.sanskrit.words.length, " \u00B7 every name decomposed"] }), _jsx("dt", { children: "Weeks" }), _jsxs("dd", { children: [WEEK_NUMBERS.length, " \u00B7 ", WEEK_NUMBERS.reduce((a, w) => a + weekRows(w).length, 0), " rows"] }), _jsx("dt", { children: "My notes" }), _jsxs("dd", { children: [Object.keys(notes || {}).length, " poses"] })] }) }), _jsx("h2", { className: "sec", children: "Corrections applied" }), _jsx("div", { className: "card tight", children: (D.corrections_applied || []).map((c) => (_jsxs("div", { style: { padding: "8px 0", borderBottom: "1px solid var(--rule)" }, children: [_jsxs("div", { className: "spread", children: [_jsx("strong", { style: { fontSize: 13 }, children: c.target_id }), _jsx("span", { className: "tag a", children: c.review_status })] }), _jsx("div", { style: { fontSize: 12, color: "var(--mut)", marginTop: 3, lineHeight: 1.55 }, children: c.evidence })] }, c.change_id))) }), _jsx("h2", { className: "sec", children: "Backup" }), _jsxs("div", { className: "card tight", children: [_jsx("div", { style: { fontSize: 12, color: "var(--mut)", lineHeight: 1.6, marginBottom: 9 }, children: "Your notes and settings live on this device only. Not synced, and lost if you clear website data." }), _jsx("textarea", { className: "inp", style: { fontFamily: "IBM Plex Mono, monospace", fontSize: 11 }, readOnly: true, value: JSON.stringify(notes), onFocus: (e) => e.target.select() })] }), _jsx("div", { className: "foot", children: SIG })] }));
-    return (_jsxs(_Fragment, { children: [_jsx("h2", { className: "sec", style: { marginTop: 2 }, children: "Pronunciation voice" }), _jsxs("div", { className: "card tight", children: [_jsx("div", { className: "eyebrow2", children: "English (India)" }), _jsx(VoiceList, { list: enIN.length ? enIN : voices.filter((v) => /^en/i.test(v.lang)), sel: prefs.voiceURI, onPick: (u) => setPrefs((p) => ({ ...p, voiceURI: u })), sample: "Utthita Trikonasana" }), _jsxs("div", { className: "spread", style: { marginTop: 12 }, children: [_jsx("span", { className: "eyebrow2", children: "Speed" }), _jsxs("span", { className: "mono", style: { fontSize: 12 }, children: [prefs.sayRate.toFixed(2), "\u00D7"] })] }), _jsx("input", { type: "range", min: "0.4", max: "1", step: "0.05", value: prefs.sayRate, onChange: (e) => setPrefs((p) => ({ ...p, sayRate: +e.target.value })), style: { width: "100%" } }), _jsx("button", { className: "btn sm", style: { marginTop: 8 }, onClick: () => say("Utthita Trikonasana"), children: "Test" })] }), _jsx("h2", { className: "sec", children: "Tools" }), _jsx("div", { className: "card", children: _jsxs("button", { className: "li", onClick: () => setPage("integrity"), children: [_jsx("div", { className: "nm", children: "Data integrity" }), _jsx("div", { className: "mt", children: _jsx("span", { children: "counts, corrections, what still needs attention" }) })] }) }), _jsx("div", { className: "foot", children: SIG })] }));
+    return (_jsxs(_Fragment, { children: [_jsx("h2", { className: "sec", style: { marginTop: 2 }, children: "Pronunciation voice" }), _jsxs("div", { className: "card tight", children: [_jsx("div", { className: "eyebrow2", children: "English (India)" }), _jsx(VoiceList, { list: enIN.length ? enIN : voices.filter((v) => /^en/i.test(v.lang)), sel: prefs.voiceURI, onPick: (u) => setPrefs((p) => ({ ...p, voiceURI: u })), sample: "Utthita Trikonasana" }), _jsxs("div", { className: "spread", style: { marginTop: 12 }, children: [_jsx("span", { className: "eyebrow2", children: "Speed" }), _jsxs("span", { className: "mono", style: { fontSize: 12 }, children: [prefs.sayRate.toFixed(2), "\u00D7"] })] }), _jsx("input", { type: "range", min: "0.4", max: "1", step: "0.05", value: prefs.sayRate, onChange: (e) => setPrefs((p) => ({ ...p, sayRate: +e.target.value })), style: { width: "100%" } }), _jsx("button", { className: "btn sm", style: { marginTop: 8 }, onClick: () => say("Utthita Trikonasana"), children: "Test" })] }), _jsx("h2", { className: "sec", children: "Course" }), _jsx("div", { className: "card", children: _jsxs("button", { className: "li", onClick: goWeeks, children: [_jsx("div", { className: "nm", children: "Weeks" }), _jsx("div", { className: "mt", children: _jsx("span", { children: "the week-by-week course, moved here when Game took its tab" }) })] }) }), _jsx("h2", { className: "sec", children: "Tools" }), _jsx("div", { className: "card", children: _jsxs("button", { className: "li", onClick: () => setPage("integrity"), children: [_jsx("div", { className: "nm", children: "Data integrity" }), _jsx("div", { className: "mt", children: _jsx("span", { children: "counts, corrections, what still needs attention" }) })] }) }), _jsx("div", { className: "foot", children: SIG })] }));
+}
+
+/* ---------- GAME ---------- */
+const gFold = (x) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const G_NUM = ["i", "ii", "iii", "iv"];
+const G_SKIP = ["asana", "sana"].concat(G_NUM);
+function gSpans(name, parts) {
+    const n = gFold(name);
+    const out = [];
+    let pos = 0;
+    for (const p of parts) {
+        let t = gFold(p.t), i = n.indexOf(t, pos);
+        if (i < 0)
+            for (const d of [1, 2]) {
+                if (t.length > d) {
+                    const q = t.slice(d), j = n.indexOf(q, pos);
+                    if (j >= 0) { t = q; i = j; break; }
+                }
+            }
+        if (i < 0) return null;
+        out.push([i, i + t.length, p.t]);
+        pos = i + t.length;
+    }
+    return out;
+}
+const GAME = (() => {
+    const by = new Map();
+    const add = (id, name, img) => {
+        if (by.has(name)) return;
+        const it = META[id] || {};
+        const parts = (it.parts || []).filter((x) => x.m && G_NUM.indexOf(gFold(x.t)) < 0);
+        const sp = parts.length ? (gSpans(name, parts) || []) : [];
+        by.set(name, { name, en: it.en || "", img: img || null, parts, page: PG[id] || null,
+            blanks: sp.filter((x) => G_SKIP.indexOf(gFold(x[2])) < 0 && x[1] - x[0] >= 3) });
+    };
+    for (const p of D.poses) add(p.id, p.name, IMG[p.id]);
+    for (const b of B2) {
+        const src = b.vis && b.vis.mode === "unique_book2_binary" ? b.id : (b.vis || {}).reusedFrom;
+        add(b.id, b.name, IMG[src]);
+    }
+    const all = [...by.values()];
+    const imgN = new Map();
+    for (const r of all) if (r.img) imgN.set(r.img, (imgN.get(r.img) || 0) + 1);
+    const sigN = new Map();
+    for (const r of all) if (r.parts.length > 1) {
+        const k = r.parts.map((x) => x.m).join(" \u00B7 ");
+        sigN.set(k, (sigN.get(k) || 0) + 1);
+    }
+    const blanks = [];
+    for (const r of all) for (const b of r.blanks) blanks.push({ r, b });
+    return {
+        all,
+        name: all.filter((r) => r.img && imgN.get(r.img) === 1),
+        blank: blanks,
+        lit: all.filter((r) => r.parts.length > 1 && sigN.get(r.parts.map((x) => x.m).join(" \u00B7 ")) === 1),
+        find: all.filter((r) => r.en),
+    };
+})();
+const G_DRILLS = [
+    ["name", "Name the pose", "A drawing and four names.", () => GAME.name.length],
+    ["blank", "Fill the missing piece", "One piece of the name is taken out. Put it back.", () => GAME.blank.length],
+    ["lit", "What the name says", "Extended \u00B7 Side \u00B7 Angle. Which pose is that?", () => GAME.lit.length],
+    ["find", "Find it by name", "You get the English. Type the Sanskrit and tap it.", () => GAME.find.length],
+];
+const gRnd = (a) => a[Math.floor(Math.random() * a.length)];
+const gShuf = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((v) => v[1]);
+function gPick(pool, n, notName) {
+    const out = [], seen = new Set([notName]), src = pool.slice();
+    while (out.length < n && src.length) {
+        const c = src.splice(Math.floor(Math.random() * src.length), 1)[0];
+        if (!seen.has(c.name)) { seen.add(c.name); out.push(c); }
+    }
+    return out;
+}
+const G_ROUND = 10;
+function gBuild(k) {
+    if (k === "name") { const r = gRnd(GAME.name); return { r, opts: gShuf([r, ...gPick(GAME.name, 3, r.name)]) }; }
+    if (k === "blank") {
+        const q = gRnd(GAME.blank), r = q.r, miss = r.name.slice(q.b[0], q.b[1]);
+        const cand = [...new Map(GAME.blank.map((x) => { const v = x.r.name.slice(x.b[0], x.b[1]); return [gFold(v), v]; })).values()].filter((x) => gFold(x) !== gFold(miss));
+        return { r, b: q.b, miss, opts: gShuf([miss, ...gShuf(cand).slice(0, 3)]) };
+    }
+    if (k === "lit") { const r = gRnd(GAME.lit); return { r, opts: gShuf([r, ...gPick(GAME.lit, 3, r.name)]) }; }
+    return { r: gRnd(GAME.find), typed: "" };
+}
+function GameView() {
+    const [drill, setDrill] = useState(null);
+    const [q, setQ] = useState(null);
+    const [typed, setTyped] = useState("");
+    const [picked, setPicked] = useState(null);
+    const [n, setN] = useState(0);
+    const [right, setRight] = useState(0);
+    const start = (k) => { setDrill(k); setQ(gBuild(k)); setTyped(""); setPicked(null); setN(0); setRight(0); };
+    const next = () => { setQ(gBuild(drill)); setTyped(""); setPicked(null); };
+    const answer = (name) => {
+        if (picked !== null) return;
+        blurNow();
+        setPicked(name);
+        setN(n + 1);
+        if (gFold(name) === gFold(drill === "blank" ? q.miss : q.r.name)) setRight(right + 1);
+    };
+    if (!drill)
+        return (_jsxs(_Fragment, { children: [
+            _jsx("h2", { className: "sec", style: { marginTop: 2 }, children: "Practise" }),
+            G_DRILLS.map(([k, t, d, cnt]) => (_jsxs("button", { className: "gm", onClick: () => start(k), children: [
+                _jsxs("span", { className: "n", children: [cnt(), " questions"] }),
+                _jsx("div", { className: "t", children: t }),
+                _jsx("div", { className: "d", children: d })] }, k))),
+            _jsx("div", { className: "subhead", style: { marginTop: 12 }, children: "Ten questions to a round. Scores are not kept between rounds." }),
+            _jsx("div", { className: "foot", children: SIG })] }));
+    const done = n >= G_ROUND && picked !== null;
+    const target = drill === "blank" ? q.miss : q.r.name;
+    const state = (label) => picked === null ? "0"
+        : gFold(label) === gFold(target) ? "right" : (label === picked ? "wrong" : "dim");
+    const opt = (label) => _jsx("button", { className: "gopt", "data-s": state(label),
+        onClick: () => answer(label), children: label }, label);
+    let card = null;
+    if (drill === "name")
+        card = _jsxs(_Fragment, { children: [
+            _jsx("div", { className: "gq", children: _jsx("img", { src: q.r.img, alt: "" }) }),
+            _jsx("div", { className: "gopts", children: q.opts.map((o) => opt(o.name)) })] });
+    if (drill === "blank") {
+        const head = q.r.name.slice(0, q.b[0]), tail = q.r.name.slice(q.b[1]);
+        card = _jsxs(_Fragment, { children: [
+            _jsxs("div", { className: "gq", children: [
+                _jsxs("div", { className: "gqt", children: [head, _jsx("u", { children: picked === null ? "\u00B7".repeat(q.b[1] - q.b[0]) : q.miss }), tail] }),
+                _jsx("div", { className: "gqh", children: q.r.en })] }),
+            _jsx("div", { className: "gopts", children: q.opts.map((o) => opt(o)) })] });
+    }
+    if (drill === "lit")
+        card = _jsxs(_Fragment, { children: [
+            _jsxs("div", { className: "gq", children: [
+                _jsx("div", { className: "gsplit" + (picked !== null ? " on" : ""), children: q.r.parts.map((x, i) => _jsx("span", { children: x.t }, i)) }),
+                _jsx("div", { className: "ggl" + (picked !== null ? " on" : ""), children: q.r.parts.map((x, i) => _jsx("span", { children: x.m }, i)) }),
+                picked === null && _jsx("div", { className: "gqh", children: q.r.parts.map((x) => x.m).join(" \u00B7 ") })] }),
+            _jsx("div", { className: "gopts", children: q.opts.map((o) => opt(o.name)) })] });
+    if (drill === "find") {
+        const t = gFold(typed);
+        const hits = t ? GAME.find.filter((r) => gFold(r.name).includes(t)).slice(0, 5) : [];
+        card = _jsxs(_Fragment, { children: [
+            _jsxs("div", { className: "gq", children: [
+                _jsx("div", { className: "gqt", children: q.r.en || q.r.name }),
+                q.r.page && _jsxs("div", { className: "gqh", children: ["page ", q.r.page] })] }),
+            _jsxs("div", { className: "gopts", children: [
+                _jsx("input", { className: "inp", value: typed, placeholder: "Start typing the Sanskrit",
+                    onChange: (e) => setTyped(e.target.value) }),
+                hits.map((r) => opt(r.name)),
+                t && hits.length === 0 && _jsx("div", { className: "note", children: "Nothing matches that yet." })] })] });
+    }
+    return (_jsxs(_Fragment, { children: [
+        _jsxs("div", { className: "gbar", children: [
+            _jsx("button", { className: "lk", onClick: () => setDrill(null), children: "\u2190 Practise" }),
+            _jsxs("span", { className: "sc", children: [right, " / ", n, n ? "" : "", "  \u00B7  ", Math.min(n + 1, G_ROUND), "/", G_ROUND] })] }),
+        card,
+        picked !== null && (_jsxs("div", { className: "gaf", children: [
+            _jsx("b", { children: q.r.name }), " \u2014 ", q.r.en,
+            _jsx("div", { className: "lit", children: q.r.parts.map((x, i) => _jsxs("div", { children: [x.t, " \u00B7 ", x.m] }, i)) }),
+            _jsxs("div", { className: "row", style: { marginTop: 11, gap: 7 }, children: [
+                !done && _jsx("button", { className: "btn pri", onClick: next, children: "Next" }),
+                done && _jsxs("span", { style: { fontWeight: 600 }, children: ["Round done \u2014 ", right, " of ", G_ROUND] }),
+                _jsx("button", { className: "btn sm", onClick: () => start(drill), children: done ? "Go again" : "Restart" }),
+                _jsx("button", { className: "btn sm", onClick: () => setDrill(null), children: "Practise" })] })] }))] }));
 }
 /* ---------- APP ---------- */
-const TABS = [["learn", "Learn"], ["pose", "Pose"], ["list", "List"], ["weeks", "Weeks"], ["patanjali", "Patañjali"], ["more", "More"]];
+const TABS = [["learn", "Learn"], ["game", "Game"], ["pose", "Pose"], ["list", "List"], ["patanjali", "Patañjali"], ["more", "More"]];
 const DEFAULT_PREFS = { voiceURI: null, sayRate: 0.5, pranSpeed: "slow", pranReps: 2 };
 function App() {
     const failures = useMemo(validate, []);
@@ -778,12 +968,14 @@ function App() {
         body = _jsx(PoseBrowse, { onOpen: openPose, onWord: openWord, say: say });
     else if (tab === "list")
         body = _jsx(ListView, { notes: notes, setNotes: setNotes, onOpen: openPose });
+    else if (tab === "game")
+        body = _jsx(GameView, {});
     else if (tab === "weeks")
         body = _jsx(WeeksView, { onOpen: openPose, prefs: prefs, setPrefs: setPrefs, voices: voices });
     else if (tab === "patanjali")
         body = (_jsxs(_Fragment, { children: [_jsx("h2", { className: "sec", style: { marginTop: 2 }, children: "Pata\u00F1jali mantra" }), _jsx("div", { className: "subhead", children: "Your own notes." }), D.patanjali.map((p, i) => _jsx("img", { className: "hw", src: p.src, alt: p.label }, i))] }));
     else
-        body = _jsx(MoreView, { prefs: prefs, setPrefs: setPrefs, say: say, voices: voices, notes: notes, setNotes: setNotes });
+        body = _jsx(MoreView, { prefs: prefs, setPrefs: setPrefs, say: say, voices: voices, notes: notes, setNotes: setNotes, goWeeks: () => { setTab("weeks"); setStack([]); window.scrollTo(0, 0); } });
     return (_jsxs("div", { className: "ap", children: [_jsx("style", { children: CSS }), _jsxs("div", { className: "hd", children: [_jsx("h1", { children: "Iyengar Course Companion" }), _jsx("span", { className: "sub", children: "Book 1 \u00B7 2" })] }), _jsxs("div", { className: "wrap", children: [_jsx("div", { style: { display: frame ? "none" : "block" }, children: body }), detail] }), _jsx("nav", { className: "tabs", children: TABS.map(([k, l]) => (_jsx("button", { "data-on": !frame && tab === k ? "1" : "0", onClick: () => { setTab(k); setStack([]); scrollY.current = []; window.scrollTo(0, 0); }, children: l }, k))) })] }));
 }
 
